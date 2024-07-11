@@ -49,8 +49,8 @@ select
     source as utm_source,
     medium as utm_medium,
     campaign as utm_campaign,
-    c.daily_spent as total_cost,
     count(s.visitor_id) as visitors_count,
+    c.daily_spent as total_cost,
     count(lead_id) as leads_count,
     count(lead_id) filter (
         where closing_reason = 'Успешно реализовано' or status_id = 142
