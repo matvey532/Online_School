@@ -68,7 +68,7 @@ with weekly_visits as (
         extract(dow from s.visit_date) as day_of_week,
         count(distinct s.visitor_id) as visitor_count
     from sessions as s
-    group by day_of_week
+    group by extract(dow from s.visit_date)
 )
 
 select
@@ -86,7 +86,6 @@ select
 from weekly_visits as wv
 order by wv.day_of_week;
 
-
 --Расчет суммарного кол-ва лидов
 select count(distinct lead_id) as leads_count from leads;
 
@@ -96,8 +95,7 @@ select
     count(distinct l.lead_id) as leads_count
 from leads as l
 group by l.created_at::date
-order by l.created_at::date asc;
-
+order by creation_date asc;
 
 -- Расчет метрик (cpu, cpl, cppu, roi) для utm_source
 with sales as (
@@ -117,10 +115,9 @@ with sales as (
             order by s.visit_date::date desc
         ) as sale_count
     from sessions as s
-    left join 
-    	leads as l on
-        	s.visitor_id = l.visitor_id and
-        	s.visit_date::date <= l.created_at::date
+    left join leads as l
+        on s.visitor_id = l.visitor_id
+        and s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
 ),
 
@@ -154,7 +151,7 @@ costs as (
 
 tab as (
     select
-        s.visit_date,
+        s.visit_date::date as visit_date,
         s.source as utm_source,
         s.medium as utm_medium,
         s.campaign as utm_campaign,
@@ -166,22 +163,18 @@ tab as (
         ) as purchases_count,
         sum(s.amount) as revenue
     from sales as s
-    left join 
-    	costs as c on
-        	s.source = c.utm_source and
-        	s.medium = c.utm_medium and
-        	s.campaign = c.utm_campaign and
-        	s.visit_date::date = c.campaign_date
+    left join costs as c
+        on s.source = c.utm_source
+        and s.medium = c.utm_medium
+        and s.campaign = c.utm_campaign
+        and s.visit_date::date = c.campaign_date
     where s.sale_count = 1
     group by
-        s.visit_date::date, s.source, s.medium, s.campaign, c.daily_spent
-    order by
-        revenue desc nulls last,
-        s.visit_date::date asc,
-        visitors_count desc,
-        utm_source asc,
-        utm_medium asc,
-        utm_campaign asc
+        s.visit_date::date,
+        s.source,
+        s.medium,
+        s.campaign,
+        c.daily_spent
 )
 
 select
@@ -210,10 +203,9 @@ select
     coalesce(
         case
             when sum(tab.total_cost) = 0 then 0
-            else 
-            	round(
-                	(sum(tab.revenue) - sum(tab.total_cost)) / 
-                	sum(tab.total_cost) * 100, 
+            else round(
+                (sum(tab.revenue) - sum(tab.total_cost)) /
+                sum(tab.total_cost) * 100,
                 2
             )
         end,
@@ -222,7 +214,6 @@ select
 from tab
 where tab.utm_source in ('vk', 'yandex')
 group by tab.utm_source;
-
 
 -- Расчет метрик (cpu, cpl, cppu, roi) для utm_source, utm_medium и utm_campaign
 with sales as (
@@ -242,10 +233,9 @@ with sales as (
             order by s.visit_date::date desc
         ) as sale_count
     from sessions as s
-    left join 
-    	leads as l on
-        	s.visitor_id = l.visitor_id and
-        	s.visit_date::date <= l.created_at::date
+    left join leads as l
+        on s.visitor_id = l.visitor_id
+        and s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
 ),
 
@@ -279,7 +269,7 @@ costs as (
 
 tab as (
     select
-        s.visit_date,
+        s.visit_date::date as visit_date,
         s.source as utm_source,
         s.medium as utm_medium,
         s.campaign as utm_campaign,
@@ -291,22 +281,18 @@ tab as (
         ) as purchases_count,
         sum(s.amount) as revenue
     from sales as s
-    left join
-    	costs as c on
-        	s.source = c.utm_source and
-        	s.medium = c.utm_medium and
-        	s.campaign = c.utm_campaign and
-        	s.visit_date::date = c.campaign_date
+    left join costs as c
+        on s.source = c.utm_source
+        and s.medium = c.utm_medium
+        and s.campaign = c.utm_campaign
+        and s.visit_date::date = c.campaign_date
     where s.sale_count = 1
     group by
-        s.visit_date::date, s.source, s.medium, s.campaign, c.daily_spent
-    order by
-        revenue desc nulls last,
-        s.visit_date::date asc,
-        visitors_count desc,
-        utm_source asc,
-        utm_medium asc,
-        utm_campaign asc
+        s.visit_date::date,
+        s.source,
+        s.medium,
+        s.campaign,
+        c.daily_spent
 )
 
 select
@@ -337,10 +323,9 @@ select
     coalesce(
         case
             when sum(tab.total_cost) = 0 then 0
-            else
-            	round(
-                	(sum(tab.revenue) - sum(tab.total_cost)) / 
-                	sum(tab.total_cost) * 100, 
+            else round(
+                (sum(tab.revenue) - sum(tab.total_cost)) /
+                sum(tab.total_cost) * 100,
                 2
             )
         end,
@@ -349,7 +334,6 @@ select
 from tab
 where tab.utm_source in ('vk', 'yandex')
 group by tab.utm_source, tab.utm_medium, tab.utm_campaign;
-
 
 -- Расчет конверсий
 with sales as (
@@ -421,13 +405,6 @@ tab as (
             and s.visit_date::date = c.campaign_date
     where s.sale_count = 1
     group by s.visit_date::date, s.source, s.medium, s.campaign, c.daily_spent
-    order by
-        revenue desc nulls last,
-        s.visit_date::date asc,
-        visitors_count desc,
-        utm_source asc,
-        utm_medium asc,
-        utm_campaign asc
 )
 
 select
@@ -506,20 +483,31 @@ group by visit_date
 order by visit_date;
 
 --Кол-во уникальных посетителей, лидов и закрытых лидов для воронки продаж
+with tab as (
+    select
+        'visitors' as category,
+        count(distinct visitor_id) as counta
+    from sessions
+
+    union all
+
+    select
+        'leads' as category,
+        count(distinct lead_id) as counta
+    from leads
+
+    union all
+
+    select
+        'purchased_leads' as category,
+        count(lead_id) filter (
+            where closing_reason = 'Успешно реализовано' or status_id = 142
+        ) as counta
+    from leads
+)
+
 select
-    'visitors' as category,
-    count(distinct visitor_id) as counta
-from sessions
-union
-select
-    'leads' as category,
-    count(distinct lead_id) as counta
-from leads
-union
-select
-    'purchased_leads' as category,
-    count(lead_id) filter (
-        where closing_reason = 'Успешно реализовано' or status_id = 142
-    ) as counta
-from leads
+    category,
+    counta
+from tab
 order by counta desc;
