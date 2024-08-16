@@ -1,5 +1,3 @@
--- Шаг 3. Расчет расходов
-
 with sales as (
     select
         s.visitor_id,
@@ -13,7 +11,7 @@ with sales as (
         l.closing_reason,
         l.status_id,
         row_number()
-            	over (partition by s.visitor_id order by s.visit_date desc)
+        over (partition by s.visitor_id order by s.visit_date desc)
         as sale_count
     from sessions as s
     left join
@@ -67,4 +65,5 @@ left join
 where s.sale_count = 1
 group by s.visit_date::date, s.source, s.medium, s.campaign, c.daily_spent
 order by
-    revenue desc nulls last, s.visit_date::date asc, visitors_count desc, utm_source asc, utm_medium asc, utm_campaign asc;
+    revenue desc nulls last, s.visit_date::date asc, visitors_count desc, 
+   	utm_source asc, utm_medium asc, utm_campaign asc;
