@@ -10,8 +10,7 @@ with sales as (
         l.created_at,
         l.closing_reason,
         l.status_id,
-        row_number()
-	        over (partition by s.visitor_id order by s.visit_date desc)
+        row_number() over (partition by s.visitor_id order by s.visit_date desc)
         as sale_count
     from sessions as s
     left join
