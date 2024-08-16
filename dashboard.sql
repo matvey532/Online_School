@@ -73,15 +73,15 @@ with weekly_visits as (
 )
 
 select
-    visitor_count,
+    wv.visitor_count,
     case
-        when day_of_week = 0 then '7.Sunday'
-        when day_of_week = 1 then '1.Monday'
-        when day_of_week = 2 then '2.Tuesday'
-        when day_of_week = 3 then '3.Wednesday'
-        when day_of_week = 4 then '4.Thursday'
-        when day_of_week = 5 then '5.Friday'
-        when day_of_week = 6 then '6.Saturday'
+        when wv.day_of_week = 0 then '7.Sunday'
+        when wv.day_of_week = 1 then '1.Monday'
+        when wv.day_of_week = 2 then '2.Tuesday'
+        when wv.day_of_week = 3 then '3.Wednesday'
+        when wv.day_of_week = 4 then '4.Thursday'
+        when wv.day_of_week = 5 then '5.Friday'
+        when wv.day_of_week = 6 then '6.Saturday'
     end as day_name
 from weekly_visits as wv
 order by wv.day_of_week;
@@ -91,8 +91,8 @@ select count(distinct lead_id) as leads_count from leads;
 
 --Расчет кол-ва созданных лидов по дням месяца
 select
-    created_at::date as creation_date,
-    count(distinct lead_id) as leads_count
+    l.created_at::date as creation_date,
+    count(distinct l.lead_id) as leads_count
 from leads as l
 group by l.created_at::date
 order by l.creation_date;
@@ -130,7 +130,11 @@ costs as (
         vk.utm_campaign,
         sum(vk.daily_spent) as daily_spent
     from vk_ads as vk
-    group by vk.campaign_date::date, vk.utm_source, vk.utm_medium, vk.utm_campaign
+    group by 
+    	vk.campaign_date::date, 
+    	vk.utm_source, 
+    	vk.utm_medium, 
+    	vk.utm_campaign
     union all
     select
         ya.campaign_date::date as campaign_date,
@@ -139,7 +143,11 @@ costs as (
         ya.utm_campaign,
         sum(ya.daily_spent) as daily_spent
     from ya_ads as ya
-    group by ya.campaign_date::date, ya.utm_source, ya.utm_medium, ya.utm_campaign
+    group by 
+    	ya.campaign_date::date, 
+    	ya.utm_source, 
+    	ya.utm_medium, 
+    	ya.utm_campaign
 ),
 
 tab as (
@@ -249,7 +257,7 @@ costs as (
         vk.campaign_date::date, vk.utm_source, vk.utm_medium, vk.utm_campaign
 
     union all
-    
+
     select
         ya.campaign_date::date as campaign_date,
         ya.utm_source,
@@ -314,14 +322,16 @@ select
     coalesce(
         case
             when sum(tab.purchases_count) = 0 then 0
-            else round(sum(tab.total_cost) / sum(tab.purchases_count), 2)
+            else 
+				round(sum(tab.total_cost) / sum(tab.purchases_count), 2)
         end,
         0
     ) as cppu,
     coalesce(
         case
             when sum(tab.total_cost) = 0 then 0
-            else round(
+            else 
+            	round(
                 (sum(tab.revenue) - sum(tab.total_cost)) / sum(tab.total_cost) * 100,
                 2
             )
