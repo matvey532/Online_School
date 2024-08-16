@@ -46,7 +46,6 @@ from tab
 group by 1
 order by 2 desc;
 
-
 -- Расчет кол-ва посетителей по дням месяца
 select
     to_char(visit_date, 'DD-MM-YYYY') as visit_date,
@@ -66,9 +65,9 @@ order by 1;
 -- Расчет кол-ва посетителей по дням недели
 with weekly_visits as (
     select
-        extract(dow from visit_date) as day_of_week,
-        count(distinct visitor_id) as visitor_count
-    from sessions
+        extract(dow from s.visit_date) as day_of_week,
+        count(distinct s.visitor_id) as visitor_count
+    from sessions as s
     group by extract(dow from visit_date)
 )
 
@@ -95,7 +94,7 @@ select
     count(distinct l.lead_id) as leads_count
 from leads as l
 group by l.created_at::date
-order by l.created_at::date;
+order by l.created_at::date asc;
 
 -- Расчет метрик (cpu, cpl, cppu, roi) для utm_source
 with sales as (
@@ -115,9 +114,10 @@ with sales as (
             order by s.visit_date::date desc
         ) as sale_count
     from sessions as s
-    left join leads as l on
-        s.visitor_id = l.visitor_id and
-        s.visit_date::date <= l.created_at::date
+    left join 
+    	leads as l on
+        	s.visitor_id = l.visitor_id and
+        	s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
 ),
 
@@ -129,10 +129,10 @@ costs as (
         vk.utm_campaign,
         sum(vk.daily_spent) as daily_spent
     from vk_ads as vk
-    group by 
-        vk.campaign_date::date, 
-        vk.utm_source, 
-        vk.utm_medium, 
+    group by
+        vk.campaign_date::date,
+        vk.utm_source,
+        vk.utm_medium,
         vk.utm_campaign
     union all
     select
@@ -142,10 +142,10 @@ costs as (
         ya.utm_campaign,
         sum(ya.daily_spent) as daily_spent
     from ya_ads as ya
-    group by 
-        ya.campaign_date::date, 
-        ya.utm_source, 
-        ya.utm_medium, 
+    group by
+        ya.campaign_date::date,
+        ya.utm_source,
+        ya.utm_medium,
         ya.utm_campaign
 ),
 
@@ -249,11 +249,11 @@ costs as (
         vk.utm_campaign,
         sum(vk.daily_spent) as daily_spent
     from vk_ads as vk
-    group by 
-        vk.campaign_date::date, 
-        vk.utm_source, 
-        vk.utm_medium, 
-        vk.utm_campaign
+    group by
+        vk.campaign_date::date,
+        vk.utm_source,
+        vk.utm_medium,
+        vk.utm_campaig
     union all
     select
         ya.campaign_date::date as campaign_date,
@@ -262,10 +262,10 @@ costs as (
         ya.utm_campaign,
         sum(ya.daily_spent) as daily_spent
     from ya_ads as ya
-    group by 
-        ya.campaign_date::date, 
-        ya.utm_source, 
-        ya.utm_medium, 
+    group by
+        ya.campaign_date::date,
+        ya.utm_source,
+        ya.utm_medium,
         ya.utm_campaign
 ),
 
@@ -481,7 +481,6 @@ with tab as (
 select max(days_passed) as days_passed
 from tab
 where ntile = 9;
-
 
 --Расчет кол-ва визитов и кол-ва рекламных кампаний по дням месяца
 select
