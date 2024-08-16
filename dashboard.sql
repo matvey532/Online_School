@@ -94,7 +94,7 @@ select
     l.created_at::date as creation_date,
     count(distinct l.lead_id) as leads_count
 from leads as l
-group by l.created_at::date
+group by l.created_at
 order by creation_date asc;
 
 -- Расчет метрик (cpu, cpl, cppu, roi) для utm_source
@@ -143,7 +143,7 @@ costs as (
         sum(ya.daily_spent) as daily_spent
     from ya_ads as ya
     group by
-        ya.campaign_date::date,
+        ya.campaign_date,
         ya.utm_source,
         ya.utm_medium,
         ya.utm_campaign
@@ -170,7 +170,7 @@ tab as (
         and s.visit_date::date = c.campaign_date
     where s.sale_count = 1
     group by
-        s.visit_date::date,
+        s.visit_date,
         s.source,
         s.medium,
         s.campaign,
@@ -379,7 +379,7 @@ costs as (
         sum(ya.daily_spent) as daily_spent
     from ya_ads as ya
     group by
-        ya.campaign_date::date, ya.utm_source, ya.utm_medium, ya.utm_campaign
+        ya.campaign_date, ya.utm_source, ya.utm_medium, ya.utm_campaign
 ),
 
 tab as (
@@ -404,7 +404,7 @@ tab as (
             and s.campaign = c.utm_campaign
             and s.visit_date::date = c.campaign_date
     where s.sale_count = 1
-    group by s.visit_date::date, s.source, s.medium, s.campaign, c.daily_spent
+    group by s.visit_date, s.source, s.medium, s.campaign, c.daily_spent
 )
 
 select
@@ -436,7 +436,7 @@ with tab as (
         sum(ya.daily_spent) as daily_spent
     from ya_ads as ya
     group by
-        ya.campaign_date::date, ya.utm_source, ya.utm_medium, ya.utm_campaign
+        ya.campaign_date, ya.utm_source, ya.utm_medium, ya.utm_campaign
 )
 
 select
@@ -446,7 +446,7 @@ select
     tab.utm_campaign,
     tab.daily_spent
 from tab
-order by tab.campaign_date::date;
+order by tab.campaign_date;
 
 --Расчет кол-ва дней, за которое закрывается 90% лидов 
 --с момента перехода по рекламе
@@ -479,8 +479,8 @@ select
     count(distinct s.campaign) as campaign_count
 from sessions as s
 where s.source ilike '%vk%' or s.source ilike '%ya%'
-group by visit_date
-order by visit_date;
+group by s.visit_date::date
+order by s.visit_date::date;
 
 --Кол-во уникальных посетителей, лидов и закрытых лидов для воронки продаж
 with tab as (
@@ -507,7 +507,7 @@ with tab as (
 )
 
 select
-    category,
-    counta
-from tab
-order by counta desc;
+    t.category,
+    t.counta
+from tab as t
+order by t.counta desc;
