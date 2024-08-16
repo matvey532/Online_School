@@ -116,9 +116,9 @@ with sales as (
         ) as sale_count
     from sessions as s
     left join 
-    	leads as l
-    		on s.visitor_id = l.visitor_id 
-        	and s.visit_date::date <= l.created_at::date
+        leads as l
+    	on s.visitor_id = l.visitor_id
+			and s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
 ),
 
@@ -131,7 +131,7 @@ costs as (
         sum(vk.daily_spent) as daily_spent
     from vk_ads as vk
     group by
-        vk.campaign_date::date,
+        vk.campaign_date,
         vk.utm_source,
         vk.utm_medium,
         vk.utm_campaign
@@ -144,7 +144,7 @@ costs as (
         sum(ya.daily_spent) as daily_spent
     from ya_ads as ya
     group by
-        ya.campaign_date,
+        campaign_date,
         ya.utm_source,
         ya.utm_medium,
         ya.utm_campaign
@@ -166,7 +166,7 @@ tab as (
     from sales as s
     left join 
     	costs as c
-        	on s.source = c.utm_source
+        on s.source = c.utm_source
         	and s.medium = c.utm_medium
         	and s.campaign = c.utm_campaign
         	and s.visit_date::date = c.campaign_date
@@ -206,10 +206,10 @@ select
         case
             when sum(tab.total_cost) = 0 then 0
             else round(
-                (sum(tab.revenue) - sum(tab.total_cost)) /
-                sum(tab.total_cost) * 100,
-                2
-            )
+				(sum(tab.revenue) - sum(tab.total_cost)) /
+                	sum(tab.total_cost) * 100,
+					2
+				)
         end,
         0
     ) as roi
@@ -237,8 +237,8 @@ with sales as (
     from sessions as s
     left join 
     	leads as l
-        	on s.visitor_id = l.visitor_id
-        	and s.visit_date::date <= l.created_at::date
+        on s.visitor_id = l.visitor_id
+			and s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
 ),
 
@@ -284,11 +284,12 @@ tab as (
         ) as purchases_count,
         sum(s.amount) as revenue
     from sales as s
-    left join costs as c
+    left join 
+    	costs as c
         on s.source = c.utm_source
-        and s.medium = c.utm_medium
-        and s.campaign = c.utm_campaign
-        and s.visit_date::date = c.campaign_date
+        	and s.medium = c.utm_medium
+        	and s.campaign = c.utm_campaign
+        	and s.visit_date::date = c.campaign_date
     where s.sale_count = 1
     group by
         s.visit_date::date,
@@ -326,9 +327,10 @@ select
     coalesce(
         case
             when sum(tab.total_cost) = 0 then 0
-            else round(
-                (sum(tab.revenue) - sum(tab.total_cost)) /
-                sum(tab.total_cost) * 100,
+            else 
+				round(
+                	(sum(tab.revenue) - sum(tab.total_cost)) /
+                	sum(tab.total_cost) * 100,
                 2
             )
         end,
@@ -464,7 +466,7 @@ with tab as (
     from sessions as s
     inner join 
     	leads as l
-        	on s.visitor_id = l.visitor_id
+        on s.visitor_id = l.visitor_id
     where
         l.closing_reason = 'Успешная продажа'
         and s.visit_date::date <= l.created_at::date
