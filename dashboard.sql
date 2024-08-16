@@ -94,7 +94,7 @@ select
     l.created_at::date as creation_date,
     count(distinct l.lead_id) as leads_count
 from leads as l
-group by l.created_at
+group by l.created_at::date
 order by creation_date asc;
 
 -- Расчет метрик (cpu, cpl, cppu, roi) для utm_source
@@ -115,9 +115,10 @@ with sales as (
             order by s.visit_date::date desc
         ) as sale_count
     from sessions as s
-    left join leads as l
-        on s.visitor_id = l.visitor_id
-        and s.visit_date::date <= l.created_at::date
+    left join 
+    	leads as l
+    		on s.visitor_id = l.visitor_id 
+        	and s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
 ),
 
@@ -163,11 +164,12 @@ tab as (
         ) as purchases_count,
         sum(s.amount) as revenue
     from sales as s
-    left join costs as c
-        on s.source = c.utm_source
-        and s.medium = c.utm_medium
-        and s.campaign = c.utm_campaign
-        and s.visit_date::date = c.campaign_date
+    left join 
+    	costs as c
+        	on s.source = c.utm_source
+        	and s.medium = c.utm_medium
+        	and s.campaign = c.utm_campaign
+        	and s.visit_date::date = c.campaign_date
     where s.sale_count = 1
     group by
         s.visit_date,
@@ -233,9 +235,10 @@ with sales as (
             order by s.visit_date::date desc
         ) as sale_count
     from sessions as s
-    left join leads as l
-        on s.visitor_id = l.visitor_id
-        and s.visit_date::date <= l.created_at::date
+    left join 
+    	leads as l
+        	on s.visitor_id = l.visitor_id
+        	and s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
 ),
 
@@ -354,9 +357,8 @@ with sales as (
     from sessions as s
     left join
         leads as l
-        on
-            s.visitor_id = l.visitor_id
-            and s.visit_date::date <= l.created_at::date
+        	on s.visitor_id = l.visitor_id
+        	and s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
 ),
 
@@ -398,8 +400,7 @@ tab as (
     from sales as s
     left join
         costs as c
-        on
-            s.source = c.utm_source
+        	on s.source = c.utm_source
             and s.medium = c.utm_medium
             and s.campaign = c.utm_campaign
             and s.visit_date::date = c.campaign_date
@@ -461,8 +462,9 @@ with tab as (
             order by l.created_at::date - s.visit_date::date
         ) as ntile
     from sessions as s
-    inner join leads as l
-        on s.visitor_id = l.visitor_id
+    inner join 
+    	leads as l
+        	on s.visitor_id = l.visitor_id
     where
         l.closing_reason = 'Успешная продажа'
         and s.visit_date::date <= l.created_at::date
@@ -479,8 +481,8 @@ select
     count(distinct s.campaign) as campaign_count
 from sessions as s
 where s.source ilike '%vk%' or s.source ilike '%ya%'
-group by s.visit_date::date
-order by s.visit_date::date;
+group by s.visit_date
+order by s.visit_date;
 
 --Кол-во уникальных посетителей, лидов и закрытых лидов для воронки продаж
 with tab as (
