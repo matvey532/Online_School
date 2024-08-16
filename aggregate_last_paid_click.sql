@@ -13,7 +13,7 @@ with sales as (
         l.closing_reason,
         l.status_id,
         row_number()
-            over (partition by s.visitor_id order by s.visit_date desc)
+            	over (partition by s.visitor_id order by s.visit_date desc)
         as sale_count
     from sessions as s
     left join
@@ -46,11 +46,11 @@ costs as (
 
 select
     s.visit_date,
-    count(s.visitor_id) as visitors_count,
     s.source as utm_source,
     s.medium as utm_medium,
     s.campaign as utm_campaign,
     c.daily_spent as total_cost,
+    count(s.visitor_id) as visitors_count,
     count(s.lead_id) as leads_count,
     count(s.lead_id) filter (
         where s.closing_reason = 'Успешно реализовано' or s.status_id = 142
