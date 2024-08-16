@@ -11,13 +11,14 @@ with sales as (
         l.closing_reason,
         l.status_id,
         row_number() over (
-            partition by s.visitor_id 
+            partition by s.visitor_id
             order by s.visit_date desc
         ) as sale_count
     from sessions as s
     left join leads as l
-        on s.visitor_id = l.visitor_id
-        and s.visit_date <= l.created_at
+        on
+            s.visitor_id = l.visitor_id
+            and s.visit_date <= l.created_at
     where s.medium != 'organic'
 ),
 
@@ -29,10 +30,10 @@ costs as (
         vk.utm_campaign,
         sum(vk.daily_spent) as daily_spent
     from vk_ads as vk
-    group by 
-        vk.campaign_date::date, 
-        vk.utm_source, 
-        vk.utm_medium, 
+    group by
+        vk.campaign_date::date,
+        vk.utm_source,
+        vk.utm_medium,
         vk.utm_campaign
     union all
     select
@@ -42,10 +43,10 @@ costs as (
         ya.utm_campaign,
         sum(ya.daily_spent) as daily_spent
     from ya_ads as ya
-    group by 
-        ya.campaign_date::date, 
-        ya.utm_source, 
-        ya.utm_medium, 
+    group by
+        ya.campaign_date::date,
+        ya.utm_source,
+        ya.utm_medium,
         ya.utm_campaign
 )
 
@@ -58,22 +59,23 @@ select
     count(s.visitor_id) as visitors_count,
     count(s.lead_id) as leads_count,
     count(s.lead_id) filter (
-        where s.closing_reason = 'Успешно реализовано' 
+        where s.closing_reason = 'Успешно реализовано'
         or s.status_id = 142
     ) as purchases_count,
     sum(s.amount) as revenue
 from sales as s
 left join costs as c
-    on s.source = c.utm_source
-    and s.medium = c.utm_medium
-    and s.campaign = c.utm_campaign
-    and s.visit_date::date = c.campaign_date
+    on
+        s.source = c.utm_source
+        and s.medium = c.utm_medium
+        and s.campaign = c.utm_campaign
+        and s.visit_date::date = c.campaign_date
 where s.sale_count = 1
-group by 
-    s.visit_date::date, 
-    s.source, 
-    s.medium, 
-    s.campaign, 
+group by
+    s.visit_date::date,
+    s.source,
+    s.medium,
+    s.campaign,
     c.daily_spent
 order by
     revenue desc nulls last,
