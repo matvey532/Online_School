@@ -68,7 +68,7 @@ with weekly_visits as (
         extract(dow from s.visit_date) as day_of_week,
         count(distinct s.visitor_id) as visitor_count
     from sessions as s
-    group by extract(dow from visit_date)
+    group by extract(dow from s.visit_date)
 )
 
 select
@@ -114,10 +114,10 @@ with sales as (
             order by s.visit_date::date desc
         ) as sale_count
     from sessions as s
-    left join 
-    	leads as l on
+    left join
+        leads as l on
         	s.visitor_id = l.visitor_id and
-        	s.visit_date::date <= l.created_at::date
+			s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
 ),
 
@@ -163,11 +163,12 @@ tab as (
         ) as purchases_count,
         sum(s.amount) as revenue
     from sales as s
-    left join costs as c on
-        s.source = c.utm_source and
-        s.medium = c.utm_medium and
-        s.campaign = c.utm_campaign and
-        s.visit_date::date = c.campaign_date
+    left join 
+    	costs as c on
+        	s.source = c.utm_source and
+        	s.medium = c.utm_medium and
+        	s.campaign = c.utm_campaign and
+            s.visit_date::date = c.campaign_date
     where s.sale_count = 1
     group by
         s.visit_date::date, s.source, s.medium, s.campaign, c.daily_spent
