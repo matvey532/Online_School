@@ -72,6 +72,7 @@ with weekly_visits as (
 )
 
 select
+    wv.day_of_week,
     wv.visitor_count,
     case
         when wv.day_of_week = 0 then '7.Sunday'
@@ -85,6 +86,7 @@ select
 from weekly_visits as wv
 order by wv.day_of_week;
 
+
 --Расчет суммарного кол-ва лидов
 select count(distinct lead_id) as leads_count from leads;
 
@@ -93,8 +95,9 @@ select
     l.created_at::date as creation_date,
     count(distinct l.lead_id) as leads_count
 from leads as l
-group by creation_date
-order by creation_date asc;
+group by l.created_at::date
+order by l.created_at::date asc;
+
 
 -- Расчет метрик (cpu, cpl, cppu, roi) для utm_source
 with sales as (
@@ -288,7 +291,7 @@ tab as (
         ) as purchases_count,
         sum(s.amount) as revenue
     from sales as s
-    left join 
+    left join
     	costs as c on
         	s.source = c.utm_source and
         	s.medium = c.utm_medium and
@@ -334,9 +337,10 @@ select
     coalesce(
         case
             when sum(tab.total_cost) = 0 then 0
-            else round(
-                (sum(tab.revenue) - sum(tab.total_cost)) / 
-                sum(tab.total_cost) * 100, 
+            else
+            	round(
+                	(sum(tab.revenue) - sum(tab.total_cost)) / 
+                	sum(tab.total_cost) * 100, 
                 2
             )
         end,
