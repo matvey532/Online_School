@@ -11,7 +11,7 @@ with sales as (
         l.amount,
         l.created_at,
         l.closing_reason,
-        status_id,
+        l.status_id,
         row_number()
             over (partition by s.visitor_id order by s.visit_date desc)
         as sale_count
@@ -45,15 +45,15 @@ costs as (
 )
 
 select
-    visit_date,
+    s.visit_date,
     count(s.visitor_id) as visitors_count,
-    source as utm_source,
-    medium as utm_medium,
-    campaign as utm_campaign,
+    s.source as utm_source,
+    s.medium as utm_medium,
+    s.campaign as utm_campaign,
     c.daily_spent as total_cost,
-    count(lead_id) as leads_count,
-    count(lead_id) filter (
-        where closing_reason = 'Успешно реализовано' or status_id = 142
+    count(s.lead_id) as leads_count,
+    count(s.lead_id) filter (
+        where s.closing_reason = 'Успешно реализовано' or s.status_id = 142
     ) as purchases_count,
     sum(s.amount) as revenue
 from sales as s
@@ -65,6 +65,6 @@ left join
         and s.campaign = c.utm_campaign
         and s.visit_date::date = c.campaign_date
 where s.sale_count = 1
-group by visit_date::date, source, medium, campaign, c.daily_spent
+group by s.visit_date::date, s.source, s.medium, s.campaign, c.daily_spent
 order by
-    revenue desc nulls last, visit_date::date asc, visitors_count desc, utm_source asc, utm_medium asc, utm_campaign asc;
+    revenue desc nulls last, s.visit_date::date asc, visitors_count desc, utm_source asc, utm_medium asc, utm_campaign asc;
