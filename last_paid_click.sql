@@ -1,5 +1,3 @@
--- Шаг 2. Расчет метрик
-
 with sales as (
     select
         s.visitor_id,
@@ -11,15 +9,15 @@ with sales as (
         l.amount,
         l.created_at,
         l.closing_reason,
-        status_id,
+        l.status_id,
         row_number()
-            over (partition by s.visitor_id order by visit_date desc)
+            over (partition by s.visitor_id order by s.visit_date desc)
         as sale_count
     from sessions as s
     left join
         leads as l
         on s.visitor_id = l.visitor_id and s.visit_date <= l.created_at
-    where s.medium != 'organic' 
+    where s.medium != 'organic'
 )
 
 select
@@ -36,5 +34,9 @@ select
 from sales as s
 where s.sale_count = 1
 order by
-    s.amount desc nulls last, s.visit_date::date asc, utm_source asc, utm_medium asc, utm_campaign asc
- limit 10;
+    s.amount desc nulls last,
+    s.visit_date::date asc,
+    utm_source asc,
+    utm_medium asc,
+    utm_campaign asc
+limit 10;
