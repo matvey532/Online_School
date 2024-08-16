@@ -66,7 +66,7 @@ order by 1;
 -- Расчет кол-ва посетителей по дням недели
 with weekly_visits as (
     select
-        extract(DOW from visit_date) as day_of_week,
+        extract(dow from visit_date) as day_of_week,
         count(distinct visitor_id) as visitor_count
     from sessions
     group by 1
@@ -115,9 +115,10 @@ with sales as (
             order by s.visit_date::date desc
         ) as sale_count
     from sessions as s
-    left join leads as l on
-        s.visitor_id = l.visitor_id and
-        s.visit_date::date <= l.created_at::date
+    left join 
+        leads as l on
+			s.visitor_id = l.visitor_id and
+			s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
 ),
 
@@ -131,9 +132,7 @@ costs as (
     from vk_ads as vk
     group by
         vk.campaign_date::date, vk.utm_source, vk.utm_medium, vk.utm_campaign
-    
     union all
-    
     select
         ya.campaign_date::date as campaign_date,
         ya.utm_source,
@@ -159,11 +158,12 @@ tab as (
         ) as purchases_count,
         sum(s.amount) as revenue
     from sales as s
-    left join costs as c on
-        s.source = c.utm_source and
-        s.medium = c.utm_medium and
-        s.campaign = c.utm_campaign and
-        s.visit_date::date = c.campaign_date
+    left join 
+    	costs as c on
+			s.source = c.utm_source and
+        	s.medium = c.utm_medium and
+        	s.campaign = c.utm_campaign and
+        	s.visit_date::date = c.campaign_date
     where s.sale_count = 1
     group by
         s.visit_date::date, s.source, s.medium, s.campaign, c.daily_spent
@@ -202,8 +202,9 @@ select
     coalesce(
         case
             when sum(tab.total_cost) = 0 then 0
-            else round(
-                (sum(tab.revenue) - sum(tab.total_cost)) / sum(tab.total_cost) * 100, 
+            else 
+				round(
+					(sum(tab.revenue) - sum(tab.total_cost)) / sum(tab.total_cost) * 100, 
                 2
             )
         end, 
@@ -231,9 +232,10 @@ with sales as (
             order by s.visit_date::date desc
         ) as sale_count
     from sessions as s
-    left join leads as l on
-        s.visitor_id = l.visitor_id and
-        s.visit_date::date <= l.created_at::date
+    left join 
+		leads as l on
+        	s.visitor_id = l.visitor_id and
+        	s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
 ),
 
@@ -275,11 +277,12 @@ tab as (
         ) as purchases_count,
         sum(s.amount) as revenue
     from sales as s
-    left join costs as c on
-        s.source = c.utm_source and
-        s.medium = c.utm_medium and
-        s.campaign = c.utm_campaign and
-        s.visit_date::date = c.campaign_date
+    left join 
+    	costs as c on
+        	s.source = c.utm_source and
+        	s.medium = c.utm_medium and
+        	s.campaign = c.utm_campaign and
+        	s.visit_date::date = c.campaign_date
     where s.sale_count = 1
     group by
         s.visit_date::date, s.source, s.medium, s.campaign, c.daily_spent
@@ -344,7 +347,7 @@ with sales as (
         l.amount,
         l.created_at,
         l.closing_reason,
-        status_id,
+        l.status_id,
         row_number()
             over (partition by s.visitor_id order by s.visit_date::date desc)
         as sale_count
@@ -381,15 +384,15 @@ costs as (
 
 tab as (
     select
-        visit_date,
-        source as utm_source,
-        medium as utm_medium,
-        campaign as utm_campaign,
+        s.visit_date,
+        s.source as utm_source,
+        s.medium as utm_medium,
+        s.campaign as utm_campaign,
         c.daily_spent as total_cost,
         count(s.visitor_id) as visitors_count,
-        count(lead_id) as leads_count,
-        count(lead_id) filter (
-            where closing_reason = 'Успешно реализовано' or status_id = 142
+        count(s.lead_id) as leads_count,
+        count(s.lead_id) filter (
+            where s.closing_reason = 'Успешно реализовано' or s.status_id = 142
         ) as purchases_count,
         sum(s.amount) as revenue
     from sales as s
@@ -401,10 +404,10 @@ tab as (
             and s.campaign = c.utm_campaign
             and s.visit_date::date = c.campaign_date
     where s.sale_count = 1
-    group by visit_date::date, source, medium, campaign, c.daily_spent
+    group by s.visit_date::date, s.source, s.medium, s.campaign, c.daily_spent
     order by
         revenue desc nulls last,
-        visit_date::date asc,
+        s.visit_date::date asc,
         visitors_count desc,
         utm_source asc,
         utm_medium asc,
@@ -419,7 +422,6 @@ select
         sum(purchases_count) / sum(leads_count) * 100, 2
     ) as leads_to_purchases_conversion
 from tab;
-
 
 -- Расчет трат по каналам
 with tab as (
@@ -445,28 +447,28 @@ with tab as (
 )
 
 select
-    campaign_date::date,
-    utm_source,
-    utm_medium,
-    utm_campaign,
-    daily_spent
+    tab.campaign_date::date,
+    tab.utm_source,
+    tab.utm_medium,
+    tab.utm_campaign,
+    tab.daily_spent
 from tab
-order by campaign_date::date;
+order by tab.campaign_date::date;
 
 --Расчет кол-ва дней, за которое закрывается 90% лидов с момента перехода по рекламе
 with tab as (
     select
         s.visitor_id,
-        visit_date::date,
-        lead_id,
-        created_at::date,
-        created_at::date - visit_date::date as days_passed,
-        ntile(10) over (order by created_at::date - visit_date::date) as ntile
+        s.visit_date::date,
+        l.lead_id,
+        l.created_at::date,
+        l.created_at::date - s.visit_date::date as days_passed,
+        ntile(10) over (order by l.created_at::date - s.visit_date::date) as ntile
     from sessions as s
     inner join leads as l
         on s.visitor_id = l.visitor_id
     where
-        closing_reason = 'Успешная продажа'
+        l.closing_reason = 'Успешная продажа'
         and s.visit_date::date <= l.created_at::date
 )
 
