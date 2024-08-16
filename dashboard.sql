@@ -83,8 +83,8 @@ select
         when day_of_week = 5 then '5.Friday'
         when day_of_week = 6 then '6.Saturday'
     end as day_name
-from weekly_visits
-order by day_of_week;
+from weekly_visits as wv
+order by wv.day_of_week;
 
 --Расчет суммарного кол-ва лидов
 select count(distinct lead_id) as leads_count from leads;
@@ -93,9 +93,9 @@ select count(distinct lead_id) as leads_count from leads;
 select
     created_at::date as creation_date,
     count(distinct lead_id) as leads_count
-from leads
-group by created_at::date
-order by creation_date;
+from leads as l
+group by l.created_at::date
+order by l.creation_date;
 
 -- Расчет метрик (cpu, cpl, cppu, roi) для utm_source
 with sales as (
@@ -117,7 +117,7 @@ with sales as (
     from sessions as s
     left join
         leads as l on
-			s.visitor_id = l.visitor_id and
+        	s.visitor_id = l.visitor_id and
 			s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
 ),
@@ -130,8 +130,7 @@ costs as (
         vk.utm_campaign,
         sum(vk.daily_spent) as daily_spent
     from vk_ads as vk
-    group by
-        vk.campaign_date::date, vk.utm_source, vk.utm_medium, vk.utm_campaign
+    group by vk.campaign_date::date, vk.utm_source, vk.utm_medium, vk.utm_campaign
     union all
     select
         ya.campaign_date::date as campaign_date,
@@ -140,8 +139,7 @@ costs as (
         ya.utm_campaign,
         sum(ya.daily_spent) as daily_spent
     from ya_ads as ya
-    group by
-        ya.campaign_date::date, ya.utm_source, ya.utm_medium, ya.utm_campaign
+    group by ya.campaign_date::date, ya.utm_source, ya.utm_medium, ya.utm_campaign
 ),
 
 tab as (
@@ -482,10 +480,10 @@ select
     visit_date::date,
     count(distinct visitor_id) as visitor_count,
     count(distinct campaign) as campaign_count
-from sessions
+from sessions as s
 where source ilike '%vk%' or source ilike '%ya%'
-group by visit_date::date
-order by visit_date::date;
+group by s.visit_date::date
+order by s.visit_date::date;
 
 
 --Кол-во уникальных посетителей, лидов и закрытых лидов для воронки продаж
