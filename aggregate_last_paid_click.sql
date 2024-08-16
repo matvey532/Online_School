@@ -16,7 +16,7 @@ with sales as (
         ) as sale_count
     from sessions as s
     left join leads as l
-        on s.visitor_id = l.visitor_id 
+        on s.visitor_id = l.visitor_id
         and s.visit_date <= l.created_at
     where s.medium != 'organic'
 ),
