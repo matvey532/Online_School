@@ -1,50 +1,50 @@
 -- Расчет суммарного кол-ва посетителей
-SELECT COUNT(DISTINCT visitor_id)
-FROM sessions;
+select count(distinct visitor_id)
+from sessions;
 
 -- Расчет кол-ва посетителей по источникам
-WITH tab AS (
-    SELECT
-        count(visitor_id) AS visitor_count,
+with tab as (
+    select
+        count(visitor_id) as visitor_count,
         upper(substring(
-            CASE
-                WHEN source ILIKE '%ya%' THEN 'yandex'
-                WHEN
-                    source ILIKE '%tg%' OR source ILIKE '%teleg%'
-                    THEN 'telegram'
-                WHEN source ILIKE '%vk%' THEN 'vkontakte'
-                WHEN source ILIKE '%facebook%' THEN 'facebook'
-                WHEN source ILIKE '%tw%' THEN 'twitter'
-                ELSE source
-            END,
+            case
+                when source ilike '%ya%' then 'yandex'
+                when
+                    source ilike '%tg%' OR source ilike '%teleg%'
+                    then 'telegram'
+                when source ilike '%vk%' then 'vkontakte'
+                when source ilike '%facebook%' then 'facebook'
+                when source ilike '%tw%' then 'twitter'
+                else source
+            end,
             1, 1
         )) || substring(
-            CASE
-                WHEN source ILIKE '%ya%' THEN 'yandex'
-                WHEN
-                    source ILIKE '%tg%' OR source ILIKE '%teleg%'
-                    THEN 'telegram'
-                WHEN source ILIKE '%vk%' THEN 'vkontakte'
-                WHEN source ILIKE '%facebook%' THEN 'facebook'
-                WHEN source ILIKE '%tw%' THEN 'twitter'
-                ELSE source
-            END,
+            case
+                when source ilike '%ya%' then 'yandex'
+                when
+                    source ilike '%tg%' OR source ilike '%teleg%'
+                    then 'telegram'
+                when source ilike '%vk%' then 'vkontakte'
+                when source ilike '%facebook%' then 'facebook'
+                when source ilike '%tw%' then 'twitter'
+                else source
+            end,
             2
-        ) AS source
-    FROM sessions
-    GROUP BY 2
-    ORDER BY 1 DESC
+        ) as source
+    from sessions
+    group by 2
+    order by 1 desc
 )
 
-SELECT
-    CASE
-        WHEN visitor_count < 1000 THEN 'Other'
-        ELSE source
-    END AS source,
-    sum(visitor_count) AS visitor_count
-FROM tab
-GROUP BY 1
-ORDER BY 2 DESC;
+select
+    case
+        when visitor_count < 1000 then 'Other'
+        else source
+    end as source,
+    sum(visitor_count) as visitor_count
+from tab
+group by 1
+order by 2 desc;
 
 -- Расчет кол-ва посетителей по дням месяца
 select
@@ -64,38 +64,38 @@ order by 1;
 
 
 -- Расчет кол-ва посетителей по дням недели
-WITH weekly_visits AS (
-    SELECT
-        EXTRACT(DOW FROM visit_date) AS day_of_week,
-        COUNT(DISTINCT visitor_id) AS visitor_count
-    FROM sessions
-    GROUP BY EXTRACT(DOW FROM visit_date)
+with weekly_visits as (
+    select
+        extract(DOW from visit_date) as day_of_week,
+        count(distinct visitor_id) as visitor_count
+    from sessions
+    group by extract(DOW from visit_date)
 )
 
-SELECT
+select
     visitor_count,
-    CASE
-        WHEN day_of_week = 0 THEN '7.Sunday'
-        WHEN day_of_week = 1 THEN '1.Monday'
-        WHEN day_of_week = 2 THEN '2.Tuesday'
-        WHEN day_of_week = 3 THEN '3.Wednesday'
-        WHEN day_of_week = 4 THEN '4.Thursday'
-        WHEN day_of_week = 5 THEN '5.Friday'
-        WHEN day_of_week = 6 THEN '6.Saturday'
-    END AS day_name
-FROM weekly_visits
-ORDER BY day_of_week;
+    case
+        when day_of_week = 0 then '7.Sunday'
+        when day_of_week = 1 then '1.Monday'
+        when day_of_week = 2 then '2.Tuesday'
+        when day_of_week = 3 then '3.Wednesday'
+        when day_of_week = 4 then '4.Thursday'
+        when day_of_week = 5 then '5.Friday'
+        when day_of_week = 6 then '6.Saturday'
+    end as day_name
+from weekly_visits
+order by day_of_week;
 
 --Расчет суммарного кол-ва лидов
-SELECT COUNT(DISTINCT lead_id) as leads_count FROM leads;
+select count(distinct lead_id) as leads_count from leads;
 
 --Расчет кол-ва созданных лидов по дням месяца
-SELECT
-    created_at::DATE AS creation_date,
-    COUNT(DISTINCT lead_id) AS leads_count
-FROM leads
-GROUP BY created_at::DATE
-ORDER BY creation_date;
+select
+    created_at::date as creation_date,
+    count(distinct lead_id) as leads_count
+from leads
+group by created_at::date
+order by creation_date;
 
 -- Расчет метрик (cpu, cpl, cppu, roi) для utm_source
 with sales as (
@@ -469,20 +469,20 @@ order by visit_date::date;
 
 
 --Кол-во уникальных посетителей, лидов и закрытых лидов для воронки продаж
-SELECT
-    'visitors' AS category,
-    COUNT(DISTINCT visitor_id) AS count
-FROM sessions
-UNION
-SELECT
-    'leads' AS category,
-    COUNT(DISTINCT lead_id) AS count
-FROM leads
-UNION
-SELECT
-    'purchased_leads' AS category,
-    COUNT(lead_id) FILTER (
-        WHERE closing_reason = 'Успешно реализовано' OR status_id = 142
-    ) AS count
-FROM leads
-ORDER BY count desc;
+select
+    'visitors' as category,
+    count(distinct visitor_id) as count
+from sessions
+union
+select
+    'leads' as category,
+    count(distinct lead_id) as count
+from leads
+union
+select
+    'purchased_leads' as category,
+    count(lead_id) filter (
+        where closing_reason = 'Успешно реализовано' OR status_id = 142
+    ) as count
+from leads
+order by count desc;
