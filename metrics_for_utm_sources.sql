@@ -91,8 +91,8 @@ select
         case
             when sum(tab.total_cost) = 0 then 0
             else round(
-                    (sum(tab.revenue) - sum(tab.total_cost)) /
-                    sum(tab.total_cost) * 100, 2
+                (sum(tab.revenue) - sum(tab.total_cost)) /
+                sum(tab.total_cost) * 100, 2
             )
         end,
         0
