@@ -9,31 +9,25 @@ with tab as (
         upper(substring(
             case
                 when source ilike '%ya%' then 'yandex'
-                when
-                    source ilike '%tg%' or source ilike '%teleg%'
-                    then 'telegram'
+                when source ilike '%tg%' or source ilike '%teleg%' then 'telegram'
                 when source ilike '%vk%' then 'vkontakte'
                 when source ilike '%facebook%' then 'facebook'
                 when source ilike '%tw%' then 'twitter'
                 else source
-            end,
-            1, 1
+            end, 1, 1
         )) || substring(
             case
                 when source ilike '%ya%' then 'yandex'
-                when
-                    source ilike '%tg%' or source ilike '%teleg%'
-                    then 'telegram'
+                when source ilike '%tg%' or source ilike '%teleg%' then 'telegram'
                 when source ilike '%vk%' then 'vkontakte'
                 when source ilike '%facebook%' then 'facebook'
                 when source ilike '%tw%' then 'twitter'
                 else source
-            end,
-            2
+            end, 2
         ) as source
     from sessions
     group by 2
-    order by 1 desc
+    orderby visitor_count desc
 )
 
 select
@@ -43,24 +37,24 @@ select
     end as source,
     sum(visitor_count) as visitor_count
 from tab
-group by 1
-order by 2 desc;
+group by source
+orderby visitor_count desc;
 
 -- Расчет кол-ва посетителей по дням месяца
 select
     to_char(visit_date, 'DD-MM-YYYY') as visit_date,
     count(distinct visitor_id) as visitor_count
 from sessions
-group by 1
-order by 1;
+group by visit_date
+orderby visit_date;
 
 -- Расчет кол-ва посетителей по неделям
 select
     to_char(visit_date, 'W') as week_of_month,
     count(distinct visitor_id) as visitor_count
 from sessions
-group by 1
-order by 1;
+group by week_of_month
+orderby week_of_month;
 
 -- Расчет кол-ва посетителей по дням недели
 with weekly_visits as (
@@ -68,7 +62,7 @@ with weekly_visits as (
         extract(dow from s.visit_date) as day_of_week,
         count(distinct s.visitor_id) as visitor_count
     from sessions as s
-    group by extract(dow from s.visit_date)
+    group by day_of_week
 )
 
 select
@@ -84,18 +78,19 @@ select
         when wv.day_of_week = 6 then '6.Saturday'
     end as day_name
 from weekly_visits as wv
-order by wv.day_of_week;
+orderby wv.day_of_week;
 
---Расчет суммарного кол-ва лидов
-select count(distinct lead_id) as leads_count from leads;
+-- Расчет суммарного кол-ва лидов
+select count(distinct lead_id) as leads_count
+from leads;
 
---Расчет кол-ва созданных лидов по дням месяца
+-- Расчет кол-ва созданных лидов по дням месяца
 select
     l.created_at::date as creation_date,
     count(distinct l.lead_id) as leads_count
 from leads as l
-group by l.created_at::date
-order by creation_date asc;
+group by creation_date
+orderby creation_date asc;
 
 -- Расчет метрик (cpu, cpl, cppu, roi) для utm_source
 with sales as (
@@ -112,7 +107,7 @@ with sales as (
         l.status_id,
         row_number() over (
             partition by s.visitor_id
-            order by s.visit_date::date desc
+            orderby s.visit_date::date desc
         ) as sale_count
     from sessions as s
     left join leads as l
@@ -129,11 +124,7 @@ costs as (
         vk.utm_campaign,
         sum(vk.daily_spent) as daily_spent
     from vk_ads as vk
-    group by
-        vk.campaign_date,
-        vk.utm_source,
-        vk.utm_medium,
-        vk.utm_campaign
+    group by vk.campaign_date, vk.utm_source, vk.utm_medium, vk.utm_campaign
     union all
     select
         ya.campaign_date::date as campaign_date,
@@ -142,11 +133,7 @@ costs as (
         ya.utm_campaign,
         sum(ya.daily_spent) as daily_spent
     from ya_ads as ya
-    group by
-        campaign_date,
-        ya.utm_source,
-        ya.utm_medium,
-        ya.utm_campaign
+    group by ya.campaign_date, ya.utm_source, ya.utm_medium, ya.utm_campaign
 ),
 
 tab as (
@@ -158,7 +145,7 @@ tab as (
         c.daily_spent as total_cost,
         count(s.visitor_id) as visitors_count,
         count(s.lead_id) as leads_count,
-        count(s.lead_id) filter (
+        count(s.lead_id) FILTER (
             where s.closing_reason = 'успешно реализовано' or s.status_id = 142
         ) as purchases_count,
         sum(s.amount) as revenue
@@ -169,12 +156,7 @@ tab as (
         and s.campaign = c.utm_campaign
         and s.visit_date::date = c.campaign_date
     where s.sale_count = 1
-    group by
-        s.visit_date,
-        s.source,
-        s.medium,
-        s.campaign,
-        c.daily_spent
+    group by s.visit_date, s.source, s.medium, s.campaign, c.daily_spent
 )
 
 select
@@ -205,8 +187,7 @@ select
             when sum(tab.total_cost) = 0 then 0
             else round(
                 (sum(tab.revenue) - sum(tab.total_cost)) /
-                sum(tab.total_cost) * 100,
-                2
+                sum(tab.total_cost) * 100, 2
             )
         end,
         0
@@ -230,7 +211,7 @@ with sales as (
         l.status_id,
         row_number() over (
             partition by s.visitor_id
-            order by s.visit_date::date desc
+            orderby s.visit_date::date desc
         ) as sale_count
     from sessions as s
     left join leads as l
@@ -247,11 +228,7 @@ costs as (
         vk.utm_campaign,
         sum(vk.daily_spent) as daily_spent
     from vk_ads as vk
-    group by
-        vk.campaign_date,
-        vk.utm_source,
-        vk.utm_medium,
-        vk.utm_campaign
+    group by vk.campaign_date, vk.utm_source, vk.utm_medium, vk.utm_campaign
     union all
     select
         ya.campaign_date::date as campaign_date,
@@ -260,11 +237,7 @@ costs as (
         ya.utm_campaign,
         sum(ya.daily_spent) as daily_spent
     from ya_ads as ya
-    group by
-        campaign_date,
-        ya.utm_source,
-        ya.utm_medium,
-        ya.utm_campaign
+    group by ya.campaign_date, ya.utm_source, ya.utm_medium, ya.utm_campaign
 ),
 
 tab as (
@@ -276,7 +249,7 @@ tab as (
         c.daily_spent as total_cost,
         count(s.visitor_id) as visitors_count,
         count(s.lead_id) as leads_count,
-        count(s.lead_id) filter (
+        count(s.lead_id) FILTER (
             where s.closing_reason = 'успешно реализовано' or s.status_id = 142
         ) as purchases_count,
         sum(s.amount) as revenue
@@ -287,12 +260,7 @@ tab as (
         and s.campaign = c.utm_campaign
         and s.visit_date::date = c.campaign_date
     where s.sale_count = 1
-    group by
-        s.visit_date,
-        s.source,
-        s.medium,
-        s.campaign,
-        c.daily_spent
+    group by s.visit_date, s.source, s.medium, s.campaign, c.daily_spent
 )
 
 select
@@ -325,15 +293,16 @@ select
             when sum(tab.total_cost) = 0 then 0
             else round(
                 (sum(tab.revenue) - sum(tab.total_cost)) /
-                sum(tab.total_cost) * 100,
-                2
+                sum(tab.total_cost) * 100, 2
             )
         end,
         0
     ) as roi
 from tab
 where tab.utm_source in ('vk', 'yandex')
-group by tab.utm_source, tab.utm_medium, tab.utm_campaign;
+group by tab.utm_source, tab.utm_medium, tab.utm_campaign
+orderby tab.utm_source, tab.utm_medium, tab.utm_campaign;
+
 
 -- Расчет конверсий
 with sales as (
@@ -349,7 +318,7 @@ with sales as (
         l.closing_reason,
         l.status_id,
         row_number()
-            over (partition by s.visitor_id order by s.visit_date::date desc)
+            over (partition by s.visitor_id orderby s.visit_date::date desc)
         as sale_count
     from sessions as s
     left join
@@ -444,7 +413,7 @@ select
     tab.utm_campaign,
     tab.daily_spent
 from tab
-order by tab.campaign_date;
+orderby tab.campaign_date;
 
 --Расчет кол-ва дней, за которое закрывается 90% лидов 
 --с момента перехода по рекламе
@@ -456,7 +425,7 @@ with tab as (
         l.created_at::date,
         l.created_at::date - s.visit_date::date as days_passed,
         ntile(10) over (
-            order by l.created_at::date - s.visit_date::date
+            orderby l.created_at::date - s.visit_date::date
         ) as ntile
     from sessions as s
     inner join 
@@ -479,7 +448,7 @@ select
 from sessions as s
 where s.source ilike '%vk%' or s.source ilike '%ya%'
 group by s.visit_date
-order by s.visit_date;
+orderby s.visit_date;
 
 --Кол-во уникальных посетителей, лидов и закрытых лидов для воронки продаж
 with tab as (
@@ -509,4 +478,4 @@ select
     t.category,
     t.counta
 from tab as t
-order by t.counta desc;
+orderby t.counta desc;
