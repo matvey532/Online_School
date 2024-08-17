@@ -60,7 +60,7 @@ tab as (
         sum(s.amount) as revenue
     from sales as s
     left join costs as c
-        on 
+        on
             s.source = c.utm_source
             and s.medium = c.utm_medium
             and s.campaign = c.utm_campaign
