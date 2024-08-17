@@ -379,7 +379,7 @@ tab as (
             and s.campaign = c.utm_campaign
             and s.visit_date::date = c.campaign_date
     where s.sale_count = 1
-    group by s.visit_date, s.source, s.medium, s.campaign, c.daily_spent
+    group by 1, 3, 3, 4, 5
 )
 
 select
