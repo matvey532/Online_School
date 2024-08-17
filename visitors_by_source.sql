@@ -28,10 +28,10 @@ with tab as (
 
 select
     case
-        when sum(visitor_count) < 1000 then 'other'
+        when visitor_count < 1000 then 'other'
         else source
     end as source,
     sum(visitor_count) as visitor_count
 from tab
-group by source
-order by visitor_count desc;
+group by 1
+order by 2 desc;
