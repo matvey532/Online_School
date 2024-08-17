@@ -27,7 +27,7 @@ with tab as (
         ) as source
     from sessions
     group by 2
-    orderby visitor_count desc
+    order by visitor_count desc
 )
 
 select
@@ -38,7 +38,7 @@ select
     sum(visitor_count) as visitor_count
 from tab
 group by source
-orderby visitor_count desc;
+order by visitor_count desc;
 
 -- Расчет кол-ва посетителей по дням месяца
 select
@@ -46,7 +46,7 @@ select
     count(distinct visitor_id) as visitor_count
 from sessions
 group by visit_date
-orderby visit_date;
+order by visit_date;
 
 -- Расчет кол-ва посетителей по неделям
 select
@@ -54,7 +54,7 @@ select
     count(distinct visitor_id) as visitor_count
 from sessions
 group by week_of_month
-orderby week_of_month;
+order by week_of_month;
 
 -- Расчет кол-ва посетителей по дням недели
 with weekly_visits as (
@@ -78,7 +78,7 @@ select
         when wv.day_of_week = 6 then '6.Saturday'
     end as day_name
 from weekly_visits as wv
-orderby wv.day_of_week;
+order by wv.day_of_week;
 
 -- Расчет суммарного кол-ва лидов
 select count(distinct lead_id) as leads_count
@@ -90,7 +90,7 @@ select
     count(distinct l.lead_id) as leads_count
 from leads as l
 group by creation_date
-orderby creation_date asc;
+order by creation_date asc;
 
 -- Расчет метрик (cpu, cpl, cppu, roi) для utm_source
 with sales as (
@@ -107,7 +107,7 @@ with sales as (
         l.status_id,
         row_number() over (
             partition by s.visitor_id
-            orderby s.visit_date::date desc
+            order by s.visit_date::date desc
         ) as sale_count
     from sessions as s
     left join leads as l
@@ -211,7 +211,7 @@ with sales as (
         l.status_id,
         row_number() over (
             partition by s.visitor_id
-            orderby s.visit_date::date desc
+            order by s.visit_date::date desc
         ) as sale_count
     from sessions as s
     left join leads as l
@@ -301,7 +301,7 @@ select
 from tab
 where tab.utm_source in ('vk', 'yandex')
 group by tab.utm_source, tab.utm_medium, tab.utm_campaign
-orderby tab.utm_source, tab.utm_medium, tab.utm_campaign;
+order by tab.utm_source, tab.utm_medium, tab.utm_campaign;
 
 
 -- Расчет конверсий
@@ -318,7 +318,7 @@ with sales as (
         l.closing_reason,
         l.status_id,
         row_number()
-            over (partition by s.visitor_id orderby s.visit_date::date desc)
+            over (partition by s.visitor_id order by s.visit_date::date desc)
         as sale_count
     from sessions as s
     left join
@@ -413,7 +413,7 @@ select
     tab.utm_campaign,
     tab.daily_spent
 from tab
-orderby tab.campaign_date;
+order by tab.campaign_date;
 
 --Расчет кол-ва дней, за которое закрывается 90% лидов 
 --с момента перехода по рекламе
@@ -425,7 +425,7 @@ with tab as (
         l.created_at::date,
         l.created_at::date - s.visit_date::date as days_passed,
         ntile(10) over (
-            orderby l.created_at::date - s.visit_date::date
+            order by l.created_at::date - s.visit_date::date
         ) as ntile
     from sessions as s
     inner join 
@@ -448,7 +448,7 @@ select
 from sessions as s
 where s.source ilike '%vk%' or s.source ilike '%ya%'
 group by s.visit_date
-orderby s.visit_date;
+order by s.visit_date;
 
 --Кол-во уникальных посетителей, лидов и закрытых лидов для воронки продаж
 with tab as (
@@ -478,4 +478,4 @@ select
     t.category,
     t.counta
 from tab as t
-orderby t.counta desc;
+order by t.counta desc;
