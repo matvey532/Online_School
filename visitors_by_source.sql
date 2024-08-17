@@ -4,7 +4,7 @@ with tab as (
         upper(substring(
             case
                 when source ilike '%ya%' then 'yandex'
-                when source ilike '%tg%' or source ilike '%teleg%' 
+                when source ilike '%tg%' or source ilike '%teleg%'
                     then 'telegram'
                 when source ilike '%vk%' then 'vkontakte'
                 when source ilike '%facebook%' then 'facebook'
@@ -14,7 +14,8 @@ with tab as (
         )) || substring(
             case
                 when source ilike '%ya%' then 'yandex'
-                when source ilike '%tg%' or source ilike '%teleg%' then 'telegram'
+                when source ilike '%tg%' or source ilike '%teleg%' 
+                    then 'telegram'
                 when source ilike '%vk%' then 'vkontakte'
                 when source ilike '%facebook%' then 'facebook'
                 when source ilike '%tw%' then 'twitter'
