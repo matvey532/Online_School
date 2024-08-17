@@ -9,8 +9,7 @@ with tab as (
             order by l.created_at::date - s.visit_date::date
         ) as ntile
     from sessions as s
-    inner join 
-    	leads as l
+    inner join leads as l
         on s.visitor_id = l.visitor_id
     where
         l.closing_reason = 'Успешная продажа'
