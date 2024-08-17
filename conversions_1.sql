@@ -16,7 +16,7 @@ with sales as (
         ) as sale_count
     from sessions as s
     left join leads as l
-        on 
+        on
             s.visitor_id = l.visitor_id
             and s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
@@ -55,15 +55,16 @@ tab as (
         count(s.lead_id) as leads_count,
         count(s.lead_id) filter (
             where s.closing_reason = 'Успешно реализовано'
-               or s.status_id = 142
+            or s.status_id = 142
         ) as purchases_count,
         sum(s.amount) as revenue
     from sales as s
     left join costs as c
-        on s.source = c.utm_source
-        and s.medium = c.utm_medium
-        and s.campaign = c.utm_campaign
-        and s.visit_date::date = c.campaign_date
+        on 
+            s.source = c.utm_source
+            and s.medium = c.utm_medium
+            and s.campaign = c.utm_campaign
+            and s.visit_date::date = c.campaign_date
     where s.sale_count = 1
     group by s.visit_date, s.source, s.medium, s.campaign, c.daily_spent
 )
