@@ -16,7 +16,7 @@ with sales as (
         ) as sale_count
     from sessions as s
     left join leads as l
-        on 
+        on
             s.visitor_id = l.visitor_id
             and s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
@@ -57,7 +57,7 @@ tab as (
         sum(s.amount) as revenue
     from sales as s
     left join costs as c
-        on 
+        on
             s.source = c.utm_source
             and s.medium = c.utm_medium
             and s.campaign = c.utm_campaign
@@ -92,10 +92,10 @@ select
     coalesce(
         case
             when sum(tab.total_cost) = 0 then 0
-            else 
+            else
                 round(
-                    (sum(tab.revenue) - sum(tab.total_cost)) /
-                    sum(tab.total_cost) * 100, 2
+                    (sum(tab.revenue) - sum(tab.total_cost)) 
+                    / sum(tab.total_cost) * 100, 2
                 )
         end,
         0
