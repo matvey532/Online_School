@@ -11,13 +11,14 @@ with sales as (
         l.closing_reason,
         l.status_id,
         row_number() over (
-            partition by s.visitor_id 
+            partition by s.visitor_id
             order by s.visit_date::date desc
         ) as sale_count
     from sessions as s
     left join leads as l
-        on s.visitor_id = l.visitor_id
-        and s.visit_date::date <= l.created_at::date
+        on 
+            s.visitor_id = l.visitor_id
+            and s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
 ),
 
@@ -53,7 +54,7 @@ tab as (
         count(s.visitor_id) as visitors_count,
         count(s.lead_id) as leads_count,
         count(s.lead_id) filter (
-            where s.closing_reason = 'Успешно реализовано' 
+            where s.closing_reason = 'Успешно реализовано'
                or s.status_id = 142
         ) as purchases_count,
         sum(s.amount) as revenue
