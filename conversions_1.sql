@@ -60,9 +60,9 @@ tab as (
     from sales as s
     left join costs as c
         on s.source = c.utm_source
-       and s.medium = c.utm_medium
-       and s.campaign = c.utm_campaign
-       and s.visit_date::date = c.campaign_date
+        and s.medium = c.utm_medium
+        and s.campaign = c.utm_campaign
+        and s.visit_date::date = c.campaign_date
     where s.sale_count = 1
     group by s.visit_date, s.source, s.medium, s.campaign, c.daily_spent
 )
