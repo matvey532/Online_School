@@ -26,7 +26,7 @@ with tab as (
 
 select
     case
-        when sum(visitor_count) < 1000 then 'Other'
+        when sum(visitor_count) < 1000 then 'other'
         else source
     end as source,
     sum(visitor_count) as visitor_count
