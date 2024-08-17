@@ -17,7 +17,7 @@ with sales as (
     from sessions as s
     left join leads as l
         on s.visitor_id = l.visitor_id
-        and s.visit_date::date <= l.created_at::date
+       and s.visit_date::date <= l.created_at::date
     where s.medium != 'organic'
 ),
 
@@ -50,16 +50,16 @@ tab as (
         c.daily_spent as total_cost,
         count(s.visitor_id) as visitors_count,
         count(s.lead_id) as leads_count,
-        count(s.lead_id) FILTER (
+        count(s.lead_id) filter (
             where s.closing_reason = 'успешно реализовано' or s.status_id = 142
         ) as purchases_count,
         sum(s.amount) as revenue
     from sales as s
     left join costs as c
         on s.source = c.utm_source
-        and s.medium = c.utm_medium
-        and s.campaign = c.utm_campaign
-        and s.visit_date::date = c.campaign_date
+       and s.medium = c.utm_medium
+       and s.campaign = c.utm_campaign
+       and s.visit_date::date = c.campaign_date
     where s.sale_count = 1
     group by s.visit_date, s.source, s.medium, s.campaign, c.daily_spent
 )
@@ -91,8 +91,8 @@ select
         case
             when sum(tab.total_cost) = 0 then 0
             else round(
-                (sum(tab.revenue) - sum(tab.total_cost)) /
-                sum(tab.total_cost) * 100, 2
+                    (sum(tab.revenue) - sum(tab.total_cost)) /
+                    sum(tab.total_cost) * 100, 2
             )
         end,
         0
